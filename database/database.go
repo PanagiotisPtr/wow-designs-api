@@ -4,11 +4,21 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var JWTKey = []byte("secret_key")
+
+// Claims used to encode jwt -- probably need to store this code on another file responsible for jwt
+type Claims struct {
+	Email string `json:"username"`
+	jwt.StandardClaims
+}
 
 // Store is our connection struct for interfacing with the database
 type Store struct {
@@ -80,7 +90,20 @@ func userDetailsFromUser(user User) UserDetails {
 }
 
 func (s *Store) GetSessionToken(email string, password string) (SessionToken, error) {
-	return SessionToken{Token: email + "." + password}, nil
+	expirationTime := time.Now().Add(5 * time.Minute)
+	claims := &Claims{
+		Email: email,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(JWTKey)
+	if err != nil {
+		return SessionToken{}, err
+	}
+
+	return SessionToken{Token: tokenString}, nil
 }
 
 func (s *Store) saveUserDetails(details UserDetails) error {

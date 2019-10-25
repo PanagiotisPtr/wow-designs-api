@@ -54,6 +54,7 @@ func initializeAPI() (*chi.Mux, *database.Store) {
 	)
 
 	router.Post("/api", s.GraphQL())
+	router.Post("/welcome", s.AuthenticatedUser())
 
 	return router, store
 }
