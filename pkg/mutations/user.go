@@ -2,14 +2,13 @@ package mutations
 
 import (
 	"user-api/pkg/resolvers"
-	"user-api/pkg/types"
 
 	"github.com/graphql-go/graphql"
 )
 
 func changePasswordMutation(resolver resolvers.Resolver) *graphql.Field {
 	return &graphql.Field{
-		Type:        types.UserDetails,
+		Type:        graphql.Boolean,
 		Description: "Create new user",
 		Args: graphql.FieldConfigArgument{
 			"email": &graphql.ArgumentConfig{
@@ -19,5 +18,6 @@ func changePasswordMutation(resolver resolvers.Resolver) *graphql.Field {
 				Type: graphql.NewNonNull(graphql.String),
 			},
 		},
+		Resolve: resolver.ChangePassword,
 	}
 }

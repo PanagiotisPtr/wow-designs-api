@@ -11,11 +11,11 @@ func userQuery(resolver resolvers.Resolver) *graphql.Field {
 	return &graphql.Field{
 		Type:        types.UserDetails,
 		Description: "Get user details using JWT in cookie",
-		Resolve:     resolver.UserDetailsResolver,
+		Resolve:     resolver.UserDetails,
 	}
 }
 
-func signupQuery(resolver resolvers.Resolver) *graphql.Field {
+func registerQuery(resolver resolvers.Resolver) *graphql.Field {
 	return &graphql.Field{
 		Type:        graphql.Boolean,
 		Description: "Register new user",
@@ -42,7 +42,7 @@ func signupQuery(resolver resolvers.Resolver) *graphql.Field {
 				Type: graphql.Boolean,
 			},
 		},
-		Resolve: resolver.RegisterResolver,
+		Resolve: resolver.Register,
 	}
 }
 
@@ -58,6 +58,6 @@ func authenticateQuery(resolver resolvers.Resolver) *graphql.Field {
 				Type: graphql.NewNonNull(graphql.String),
 			},
 		},
-		Resolve: resolver.AuthenticationResolver,
+		Resolve: resolver.Authenticate,
 	}
 }
