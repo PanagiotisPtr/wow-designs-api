@@ -1,4 +1,4 @@
-module webserver-init
+module user-api
 
 go 1.13
 
