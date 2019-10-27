@@ -16,12 +16,7 @@ func NewQueryType(s *database.Store) *graphql.Object {
 				"user": &graphql.Field{
 					Type:        UserDetails,
 					Description: "Get user by email",
-					Args: graphql.FieldConfigArgument{
-						"email": &graphql.ArgumentConfig{
-							Type: graphql.String,
-						},
-					},
-					Resolve: resolver.UserDetailsResolver,
+					Resolve:     resolver.UserDetailsResolver,
 				},
 				"signup": &graphql.Field{
 					Type:        graphql.Boolean,
