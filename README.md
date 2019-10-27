@@ -2,7 +2,7 @@
 This is the api used by the front end of wow designs. 
 
 ## Overview
-The api is written in Go and uses mongoDB for a databse and GraphQL as an interface. The folder structure is hopefully pretty clear but essentially the queries are in the queries folder, the mutations in the mutations folder and so on. 
+The api is written in Go and uses mongoDB for a databse and GraphQL as an interface. The folder structure is hopefully pretty clear but essentially the queries are in the queries folder, the mutations in the mutations folder and so on. The API uses bcrypt to encrypt the user password and implement salting. It also uses JSON Web Tokens (JWT) to identify users and ensure that they can only access their own information and not the information of other users.
 
 ## Building the code
 To build the API run ```make build``` which should build an executable at /bin/api which you can use to run the api.
