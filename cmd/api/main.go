@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"user-api/pkg/database"
-	"user-api/pkg/gql"
+	"user-api/pkg/queries"
 	"user-api/pkg/server"
 
 	"github.com/graphql-go/graphql"
@@ -30,7 +30,7 @@ func initializeAPI() (*chi.Mux, *database.Store) {
 		log.Fatal(err)
 	}
 
-	queryType := gql.NewQueryType(store)
+	queryType := queries.NewQueryType(store)
 
 	sc, err := graphql.NewSchema(
 		graphql.SchemaConfig{
