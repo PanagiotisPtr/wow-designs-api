@@ -95,7 +95,7 @@ func userDetailsFromUser(user User) UserDetails {
 
 // GetSessionToken returns a token for a given session
 func (s *Store) GetSessionToken(email string, password string) (SessionToken, error) {
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		Email: email,
 		StandardClaims: jwt.StandardClaims{
@@ -154,14 +154,30 @@ func (s *Store) CreateUser(creds UserCredentials, details UserDetails) error {
 
 // DeleteUser from the databse with email
 func (s *Store) DeleteUser(email string) error {
+
+	filter := bson.M{
+		"email": bson.M{
+			"$eq": email,
+		},
+	}
+
 	userCollection := s.Collection("userDetails")
 
-	deleteResult, err := userCollection.DeleteOne(context.TODO(), bson.D{{Key: "email", Value: email}})
+	deleteResult, err := userCollection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Deleted %v documents in the users collection\n", deleteResult.DeletedCount)
+	fmt.Printf("Deleted %v documents in the userDetails collection\n", deleteResult.DeletedCount)
+
+	userCollection = s.Collection("userCredentials")
+
+	deleteResult, err = userCollection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Deleted %v documents in the userCredentials collection\n", deleteResult.DeletedCount)
 
 	return nil
 }

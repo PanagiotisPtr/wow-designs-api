@@ -84,7 +84,7 @@ func (r *Resolver) Register(p graphql.ResolveParams) (interface{}, error) {
 		return false, fmt.Errorf("Resolver.Register: User already exists")
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 8)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
 		return false, err
 	}
@@ -170,9 +170,40 @@ func (r *Resolver) ChangePassword(p graphql.ResolveParams) (interface{}, error) 
 		return false, fmt.Errorf("Resolver.ChangePassword: Could not authenticate user: %s", err.Error())
 	}
 
-	err = r.Store.ChangeUserPassword(authEmail, newPassword)
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 10)
+	if err != nil {
+		return false, fmt.Errorf("Resolver.ChangePassword: Dailed to hash new password: %s", err.Error())
+	}
+
+	err = r.Store.ChangeUserPassword(authEmail, string(hash))
 	if err != nil {
 		return false, fmt.Errorf("Resolver.ChangePassword: Could not change password: %s", err.Error())
+	}
+
+	return true, nil
+}
+
+// Terminate a user account
+func (r *Resolver) Terminate(p graphql.ResolveParams) (interface{}, error) {
+	cookie := p.Context.Value("cookie").(*http.Cookie)
+	authEmail, err := getUserEmailFromCookie(cookie)
+	if err != nil {
+		return nil, err
+	}
+
+	password, ok := p.Args["password"].(string)
+	if !ok {
+		return nil, fmt.Errorf("AuthenticationResolver: invalide resolve arguments: %v", p.Args)
+	}
+
+	err = r.authenticateUser(authEmail, password)
+	if err != nil {
+		return false, fmt.Errorf("Resolver.ChangePassword: Could not authenticate user: %s", err.Error())
+	}
+
+	err = r.Store.DeleteUser(authEmail)
+	if err != nil {
+		return false, fmt.Errorf("Resolver.Terminate: Could not delete user account: %s", err.Error())
 	}
 
 	return true, nil

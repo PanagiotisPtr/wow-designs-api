@@ -21,3 +21,16 @@ func changePasswordMutation(resolver resolvers.Resolver) *graphql.Field {
 		Resolve: resolver.ChangePassword,
 	}
 }
+
+func terminateMutation(resolver resolvers.Resolver) *graphql.Field {
+	return &graphql.Field{
+		Type:        graphql.Boolean,
+		Description: "Terminate current user account",
+		Args: graphql.FieldConfigArgument{
+			"password": &graphql.ArgumentConfig{
+				Type: graphql.NewNonNull(graphql.String),
+			},
+		},
+		Resolve: resolver.Terminate,
+	}
+}
