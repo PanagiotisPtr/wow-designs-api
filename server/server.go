@@ -58,6 +58,35 @@ func (s *Server) AuthenticatedUser() http.HandlerFunc {
 	}
 }
 
+func getUserEmailFromRequest(r *http.Request) (string, int32, error) {
+	fmt.Println("Test")
+	c, err := r.Cookie("token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return "", http.StatusUnauthorized, fmt.Errorf("No cookie found")
+		}
+
+		return "", http.StatusBadRequest, fmt.Errorf("Bad request")
+	}
+
+	tokenString := c.Value
+	claims := &database.Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return database.JWTKey, nil
+	})
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return "", http.StatusUnauthorized, fmt.Errorf("Invalid signature")
+		}
+		return "", http.StatusBadRequest, fmt.Errorf("Bad request")
+	}
+	if !token.Valid {
+		return "", http.StatusUnauthorized, fmt.Errorf("Invalid Token")
+	}
+	return claims.Email, http.StatusOK, nil
+}
+
 func (s *Server) GraphQL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Body == nil {
@@ -72,7 +101,10 @@ func (s *Server) GraphQL() http.HandlerFunc {
 			http.Error(w, "Error parsing JSON request body", 400)
 		}
 
-		result := gql.ExecuteQuery(rBody.Query, *s.GqlSchema)
+		// Authenticate user with JWT same function as above but not a handler
+		// Get user email from JWT
+		userEmail := "user@email.com"
+		result := gql.ExecuteQuery(rBody.Query, *s.GqlSchema, userEmail)
 
 		render.JSON(w, r, result)
 	}

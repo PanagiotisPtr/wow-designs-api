@@ -140,7 +140,8 @@ func (r *Resolver) AuthenticationResolver(p graphql.ResolveParams) (interface{},
 
 func (r *Resolver) UserDetailsResolver(p graphql.ResolveParams) (interface{}, error) {
 	email, ok := p.Args["email"].(string)
-
+	token := p.Context.Value("token")
+	log.Println("FOUND TOKEN: ", token)
 	if ok {
 		users, err := r.store.GetUserDetailsByEmail(email)
 		return users, err
