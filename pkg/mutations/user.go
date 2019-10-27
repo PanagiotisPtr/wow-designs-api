@@ -9,12 +9,12 @@ import (
 func changePasswordMutation(resolver resolvers.Resolver) *graphql.Field {
 	return &graphql.Field{
 		Type:        graphql.Boolean,
-		Description: "Create new user",
+		Description: "Change user password",
 		Args: graphql.FieldConfigArgument{
-			"email": &graphql.ArgumentConfig{
+			"password": &graphql.ArgumentConfig{
 				Type: graphql.NewNonNull(graphql.String),
 			},
-			"password": &graphql.ArgumentConfig{
+			"newPassword": &graphql.ArgumentConfig{
 				Type: graphql.NewNonNull(graphql.String),
 			},
 		},

@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// JWTKey used to sign JSON Web Tokens
 var JWTKey = []byte("secret_key")
 
 // Claims used to encode jwt -- probably need to store this code on another file responsible for jwt
@@ -26,11 +27,13 @@ type Store struct {
 	client *mongo.Client
 }
 
+// Close a connection with the database
 func (s *Store) Close(ctx context.Context) {
 	log.Println("Closing connection")
 	s.client.Disconnect(ctx)
 }
 
+// New connection with the database
 func New(uri string, name string) (*Store, error) {
 	clientOptions := options.Client().ApplyURI(uri)
 
@@ -60,6 +63,7 @@ type SessionToken struct {
 	Token string
 }
 
+// UserCredentials include email and password for a user
 type UserCredentials struct {
 	Email    string
 	Password string
@@ -89,6 +93,7 @@ func userDetailsFromUser(user User) UserDetails {
 	return details
 }
 
+// GetSessionToken returns a token for a given session
 func (s *Store) GetSessionToken(email string, password string) (SessionToken, error) {
 	expirationTime := time.Now().Add(5 * time.Minute)
 	claims := &Claims{
@@ -132,6 +137,7 @@ func (s *Store) saveUserCredentials(creds UserCredentials) error {
 	return nil
 }
 
+// CreateUser given login credentials and details
 func (s *Store) CreateUser(creds UserCredentials, details UserDetails) error {
 	err := s.saveUserCredentials(creds)
 	if err != nil {
@@ -146,6 +152,7 @@ func (s *Store) CreateUser(creds UserCredentials, details UserDetails) error {
 	return nil
 }
 
+// DeleteUser from the databse with email
 func (s *Store) DeleteUser(email string) error {
 	userCollection := s.Collection("userDetails")
 
@@ -159,48 +166,29 @@ func (s *Store) DeleteUser(email string) error {
 	return nil
 }
 
-func (s *Store) AuthenticateUser(email string, password string) (bool, error) {
-	userCollection := s.Collection("userDetails")
-
-	var user User
-
-	err := userCollection.FindOne(context.TODO(), bson.D{{Key: "email", Value: email}}).Decode(&user)
-	if err != nil {
-		return false, err
+// ChangeUserPassword for a specific user
+func (s *Store) ChangeUserPassword(email string, newPassword string) error {
+	filter := bson.M{
+		"email": bson.M{
+			"$eq": email,
+		},
 	}
 
-	if user.Password == password {
-		return true, nil
+	update := bson.M{
+		"$set": bson.M{
+			"password": newPassword,
+		},
 	}
 
-	return false, nil
-}
-
-func (s *Store) ChangeUserPassword(email string, password string, newPassword string) error {
-	correctCredentials, err := s.AuthenticateUser(email, password)
-	if err != nil {
-		return err
-	}
-	if correctCredentials == false {
-		return fmt.Errorf("Invalid user credentials for user: %s", email)
-	}
-
-	filter := bson.D{{Key: "email", Value: email}}
-
-	update := bson.D{
-		{Key: "$eq", Value: bson.D{
-			{Key: "password", Value: newPassword},
-		}},
-	}
-
-	userCollection := s.Collection("userDetails")
+	userCollection := s.Collection("userCredentials")
 
 	updateResult, err := userCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
+	log.Printf("Changed password for user %s. %v documents were matched and %v were modified.\n",
+		email, updateResult.MatchedCount, updateResult.ModifiedCount)
 
 	return nil
 }
@@ -255,35 +243,4 @@ func (s *Store) GetUserDetailsByEmail(email string) (UserDetails, error) {
 	}
 
 	return userDetailsFromUser(result), nil
-}
-
-func (s *Store) GetAllUserDetails() ([]UserDetails, error) {
-	findOptions := options.Find()
-	userCollection := s.Collection("userDetails")
-
-	var details []UserDetails
-
-	cur, err := userCollection.Find(context.TODO(), bson.D{{}}, findOptions)
-	if err != nil {
-		return []UserDetails{}, err
-	}
-
-	defer cur.Close(context.TODO())
-
-	for cur.Next(context.TODO()) {
-		var elem User
-
-		err := cur.Decode(&elem)
-		if err != nil {
-			return details, err
-		}
-
-		details = append(details, userDetailsFromUser(elem))
-	}
-
-	if err := cur.Err(); err != nil {
-		return details, err
-	}
-
-	return details, nil
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-func userQuery(resolver resolvers.Resolver) *graphql.Field {
+func userDetailsQuery(resolver resolvers.Resolver) *graphql.Field {
 	return &graphql.Field{
 		Type:        types.UserDetails,
 		Description: "Get user details using JWT in cookie",

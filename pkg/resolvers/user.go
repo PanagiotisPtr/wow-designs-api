@@ -70,13 +70,18 @@ func (r *Resolver) Register(p graphql.ResolveParams) (interface{}, error) {
 	email, ok := p.Args["email"].(string)
 
 	if !ok {
-		return false, fmt.Errorf("AuthenticationResolver: invalide resolve arguments: %v", p.Args)
+		return false, fmt.Errorf("Resolver.Authentication: invalide resolve arguments: %v", p.Args)
 	}
 
 	password, ok := p.Args["password"].(string)
 
 	if !ok {
-		return false, fmt.Errorf("AuthenticationResolver: invalide resolve arguments: %v", p.Args)
+		return false, fmt.Errorf("Resolver.Authentication: invalide resolve arguments: %v", p.Args)
+	}
+
+	_, err := r.Store.GetUserDetailsByEmail(email)
+	if err == nil {
+		return false, fmt.Errorf("Resolver.Register: User already exists")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 8)
@@ -86,7 +91,7 @@ func (r *Resolver) Register(p graphql.ResolveParams) (interface{}, error) {
 
 	details, errors := getUserDetailsFromParams(p)
 	if errors != nil {
-		log.Println("RegisterResolver: Errors when getting user details: ")
+		log.Println("Resolver.Register: Errors when getting user details: ")
 		log.Println(errors)
 	}
 
@@ -114,12 +119,7 @@ func (r *Resolver) Authenticate(p graphql.ResolveParams) (interface{}, error) {
 		return nil, fmt.Errorf("AuthenticationResolver: invalide resolve arguments: %v", p.Args)
 	}
 
-	creds, err := r.Store.GetUserPassword(email)
-	if err != nil {
-		return nil, err
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(creds.Password), []byte(password))
+	err := r.authenticateUser(email, password)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,11 @@ func (r *Resolver) Authenticate(p graphql.ResolveParams) (interface{}, error) {
 // UserDetails sends back the details about a specific the user who sent the request
 // based on the JWT that was included in the cookie
 func (r *Resolver) UserDetails(p graphql.ResolveParams) (interface{}, error) {
-	cookie := p.Context.Value("cookie").(*http.Cookie)
+	cookie, ok := p.Context.Value("cookie").(*http.Cookie)
+	if !ok || cookie == nil {
+		return nil, fmt.Errorf("Error parsing JWT cookie from header")
+	}
+
 	authEmail, err := getUserEmailFromCookie(cookie)
 	if err != nil {
 		return nil, err
@@ -145,5 +149,31 @@ func (r *Resolver) UserDetails(p graphql.ResolveParams) (interface{}, error) {
 // ChangePassword changes the current user password. Returns true on success
 // or false otherwise
 func (r *Resolver) ChangePassword(p graphql.ResolveParams) (interface{}, error) {
+	cookie := p.Context.Value("cookie").(*http.Cookie)
+	authEmail, err := getUserEmailFromCookie(cookie)
+	if err != nil {
+		return nil, err
+	}
+
+	password, ok := p.Args["password"].(string)
+	if !ok {
+		return nil, fmt.Errorf("AuthenticationResolver: invalide resolve arguments: %v", p.Args)
+	}
+
+	newPassword, ok := p.Args["newPassword"].(string)
+	if !ok {
+		return nil, fmt.Errorf("AuthenticationResolver: invalide resolve arguments: %v", p.Args)
+	}
+
+	err = r.authenticateUser(authEmail, password)
+	if err != nil {
+		return false, fmt.Errorf("Resolver.ChangePassword: Could not authenticate user: %s", err.Error())
+	}
+
+	err = r.Store.ChangeUserPassword(authEmail, newPassword)
+	if err != nil {
+		return false, fmt.Errorf("Resolver.ChangePassword: Could not change password: %s", err.Error())
+	}
+
 	return true, nil
 }

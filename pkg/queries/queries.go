@@ -16,7 +16,7 @@ func NewQueryType(s *database.Store) *graphql.Object {
 		graphql.ObjectConfig{
 			Name: "Query",
 			Fields: graphql.Fields{
-				"user":         userQuery(resolver),
+				"userDetails":  userDetailsQuery(resolver),
 				"register":     registerQuery(resolver),
 				"authenticate": authenticateQuery(resolver),
 			},

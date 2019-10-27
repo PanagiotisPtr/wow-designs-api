@@ -1,0 +1,11 @@
+// Create user
+curl --header "Content-Type: application/json" --request POST --data '{ "query": "{register (email:\"example@email.com\", password: \"secretPassword\", firstName: \"Andrew\", lastName: \"Brown\", gender: \"Male\", dateOfBirth: \"2/12/1999\", sendDeals: false) }" }'  http://localhost:4000/api
+
+// Authenticate user
+curl --header "Content-Type: application/json" --request POST --data '{ "query": "{authenticate (email:\"example@email.com\", password: \"secretPassword\") {token}}" }'  http://localhost:4000/api
+
+// Get User Details
+curl --header "Content-Type: application/json" --request POST --cookie "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImV4YW1wbGVAZW1haWwuY29tIiwiZXhwIjoxNTcyMjE4NTk1fQ.RvFzTELiij1lOJVYRySQnRuyussY1zWEutb9K9QRORM" --data '{ "query": "{userDetails {email, firstName, lastName, gender, dateOfBirth, sendDeals}}" }'  http://localhost:4000/api
+
+// Change Password
+curl --header "Content-Type: application/json" --request POST --cookie "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImV4YW1wbGVAZW1haWwuY29tIiwiZXhwIjoxNTcyMjE5NDcwfQ.cH5aB5FF-oiGhjB5vf-_JDFmBq4UwMos-3HCrqg_Vw4" --data '{ "query": "mutation {changePassword (password: \"secretPassword\", newPassword: \"obviousPassword\") }" }'  http://localhost:4000/api

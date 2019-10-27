@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"user-api/pkg/database"
+	"user-api/pkg/mutations"
 	"user-api/pkg/queries"
 	"user-api/pkg/server"
 
@@ -31,10 +32,12 @@ func initializeAPI() (*chi.Mux, *database.Store) {
 	}
 
 	queryType := queries.NewQueryType(store)
+	mutationType := mutations.NewMutationType(store)
 
 	sc, err := graphql.NewSchema(
 		graphql.SchemaConfig{
-			Query: queryType,
+			Query:    queryType,
+			Mutation: mutationType,
 		},
 	)
 	if err != nil {
