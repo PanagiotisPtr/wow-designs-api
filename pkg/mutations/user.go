@@ -78,6 +78,22 @@ func changeUserDetails(resolver resolvers.Resolver) *graphql.Field {
 	}
 }
 
+func changeUserEmail(resolver resolvers.Resolver) *graphql.Field {
+	return &graphql.Field{
+		Type:        graphql.Boolean,
+		Description: "Change user email",
+		Args: graphql.FieldConfigArgument{
+			"newEmail": &graphql.ArgumentConfig{
+				Type: graphql.NewNonNull(graphql.String),
+			},
+			"password": &graphql.ArgumentConfig{
+				Type: graphql.NewNonNull(graphql.String),
+			},
+		},
+		Resolve: resolver.ChangeUserEmail,
+	}
+}
+
 func terminateMutation(resolver resolvers.Resolver) *graphql.Field {
 	return &graphql.Field{
 		Type:        graphql.Boolean,

@@ -239,6 +239,40 @@ func (s *Store) ChangeUserDetails(email string, details UserDetails) error {
 	return nil
 }
 
+func (s *Store) ChangeUserEmail(email string, newEmail string) error {
+	filter := bson.M{
+		"email": bson.M{
+			"$eq": email,
+		},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"email": newEmail,
+		},
+	}
+
+	userCollection := s.Collection("userDetails")
+
+	updateResult, err := userCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
+
+	userCollection = s.Collection("userCredentials")
+
+	updateResult, err = userCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
+
+	return nil
+}
+
 // GetUserPassword sends back the (hashed) password of a particular user
 func (s *Store) GetUserPassword(email string) (UserCredentials, error) {
 	userCollection := s.Collection("userCredentials")

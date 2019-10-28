@@ -220,6 +220,36 @@ func (r *Resolver) ChangeUserDetails(p graphql.ResolveParams) (interface{}, erro
 	return true, nil
 }
 
+func (r *Resolver) ChangeUserEmail(p graphql.ResolveParams) (interface{}, error) {
+	cookie := p.Context.Value("cookie").(*http.Cookie)
+	authEmail, err := getUserEmailFromCookie(cookie)
+	if err != nil {
+		return nil, err
+	}
+
+	password, ok := p.Args["password"].(string)
+	if !ok {
+		return nil, fmt.Errorf("Resolver.ChangeUserEmail: invalide resolve arguments: %v", p.Args)
+	}
+
+	newEmail, ok := p.Args["newEmail"].(string)
+	if !ok {
+		return nil, fmt.Errorf("Resolver.ChangeUserEmail: invalide resolve arguments: %v", p.Args)
+	}
+
+	err = r.authenticateUser(authEmail, password)
+	if err != nil {
+		return false, fmt.Errorf("Resolver.ChangeUserEmail: Could not authenticate user: %s", err.Error())
+	}
+
+	err = r.Store.ChangeUserEmail(authEmail, newEmail)
+	if err != nil {
+		return false, fmt.Errorf("Resolver.ChangeUserEmail: Could not update user record: %s", err.Error())
+	}
+
+	return true, nil
+}
+
 // Terminate a user account
 func (r *Resolver) Terminate(p graphql.ResolveParams) (interface{}, error) {
 	cookie := p.Context.Value("cookie").(*http.Cookie)
