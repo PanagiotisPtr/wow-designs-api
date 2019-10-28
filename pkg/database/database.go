@@ -209,6 +209,7 @@ func (s *Store) ChangeUserPassword(email string, newPassword string) error {
 	return nil
 }
 
+// UpdateUserDetailsByEmail updates the details of a user given their email address
 func (s *Store) UpdateUserDetailsByEmail(email string, newDetails UserDetails) error {
 	filter := bson.D{{Key: "email", Value: email}}
 
@@ -235,6 +236,7 @@ func (s *Store) UpdateUserDetailsByEmail(email string, newDetails UserDetails) e
 	return nil
 }
 
+// GetUserPassword sends back the (hashed) password of a particular user
 func (s *Store) GetUserPassword(email string) (UserCredentials, error) {
 	userCollection := s.Collection("userCredentials")
 
@@ -248,6 +250,7 @@ func (s *Store) GetUserPassword(email string) (UserCredentials, error) {
 	return result, nil
 }
 
+// GetUserDetailsByEmail retuns the user emails based on their email
 func (s *Store) GetUserDetailsByEmail(email string) (UserDetails, error) {
 	userCollection := s.Collection("userDetails")
 
