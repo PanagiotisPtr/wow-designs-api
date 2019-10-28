@@ -16,8 +16,10 @@ func NewMutationType(s *database.Store) *graphql.Object {
 		graphql.ObjectConfig{
 			Name: "Mutation",
 			Fields: graphql.Fields{
-				"changePassword": changePasswordMutation(resolver),
-				"terminate":      terminateMutation(resolver),
+				"register":          registerMutation(resolver),
+				"changePassword":    changePasswordMutation(resolver),
+				"changeUserDetails": changeUserDetails(resolver),
+				"terminate":         terminateMutation(resolver),
 			},
 		},
 	)

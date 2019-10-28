@@ -44,7 +44,6 @@ func New(uri string, name string) (*Store, error) {
 	}
 
 	db := client.Database(name)
-	log.Println("Successfully connected to the database")
 	return &Store{db, client}, nil
 }
 
@@ -209,19 +208,23 @@ func (s *Store) ChangeUserPassword(email string, newPassword string) error {
 	return nil
 }
 
-// UpdateUserDetailsByEmail updates the details of a user given their email address
-func (s *Store) UpdateUserDetailsByEmail(email string, newDetails UserDetails) error {
-	filter := bson.D{{Key: "email", Value: email}}
+// ChangeUserDetails updates the details of a user given their email address
+func (s *Store) ChangeUserDetails(email string, details UserDetails) error {
+	filter := bson.M{
+		"email": bson.M{
+			"$eq": email,
+		},
+	}
 
-	update := bson.D{
-		{Key: "$eq", Value: bson.D{
-			{Key: "email", Value: newDetails.Email},
-			{Key: "firstName", Value: newDetails.FirstName},
-			{Key: "lastName", Value: newDetails.LastName},
-			{Key: "gender", Value: newDetails.Gender},
-			{Key: "dateOfBirth", Value: newDetails.DateOfBirth},
-			{Key: "sendDeals", Value: newDetails.SendDeals},
-		}},
+	update := bson.M{
+		"$set": bson.M{
+			"email":       details.Email,
+			"firstname":   details.FirstName,
+			"lastname":    details.LastName,
+			"gender":      details.Gender,
+			"dateofbirth": details.DateOfBirth,
+			"senddeals":   details.SendDeals,
+		},
 	}
 
 	userCollection := s.Collection("userDetails")
@@ -250,8 +253,8 @@ func (s *Store) GetUserPassword(email string) (UserCredentials, error) {
 	return result, nil
 }
 
-// GetUserDetailsByEmail retuns the user emails based on their email
-func (s *Store) GetUserDetailsByEmail(email string) (UserDetails, error) {
+// GetUserDetails retuns the user emails based on their email
+func (s *Store) GetUserDetails(email string) (UserDetails, error) {
 	userCollection := s.Collection("userDetails")
 
 	var result User

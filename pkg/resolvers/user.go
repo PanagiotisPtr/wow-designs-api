@@ -79,7 +79,7 @@ func (r *Resolver) Register(p graphql.ResolveParams) (interface{}, error) {
 		return false, fmt.Errorf("Resolver.Authentication: invalide resolve arguments: %v", p.Args)
 	}
 
-	_, err := r.Store.GetUserDetailsByEmail(email)
+	_, err := r.Store.GetUserDetails(email)
 	if err == nil {
 		return false, fmt.Errorf("Resolver.Register: User already exists")
 	}
@@ -142,8 +142,8 @@ func (r *Resolver) UserDetails(p graphql.ResolveParams) (interface{}, error) {
 		return nil, err
 	}
 
-	users, err := r.Store.GetUserDetailsByEmail(authEmail)
-	return users, err
+	userDetails, err := r.Store.GetUserDetails(authEmail)
+	return userDetails, err
 }
 
 // ChangePassword changes the current user password. Returns true on success
@@ -178,6 +178,43 @@ func (r *Resolver) ChangePassword(p graphql.ResolveParams) (interface{}, error) 
 	err = r.Store.ChangeUserPassword(authEmail, string(hash))
 	if err != nil {
 		return false, fmt.Errorf("Resolver.ChangePassword: Could not change password: %s", err.Error())
+	}
+
+	return true, nil
+}
+
+// ChangeUserDetails changes the details of a specific user
+func (r *Resolver) ChangeUserDetails(p graphql.ResolveParams) (interface{}, error) {
+	cookie := p.Context.Value("cookie").(*http.Cookie)
+	authEmail, err := getUserEmailFromCookie(cookie)
+	if err != nil {
+		return false, err
+	}
+
+	userDetails, err := r.Store.GetUserDetails(authEmail)
+	if err != nil {
+		return false, err
+	}
+
+	newUserDetails, _ := getUserDetailsFromParams(p)
+	// Not allowed to change email without authentication
+	newUserDetails.Email = userDetails.Email
+	if newUserDetails.FirstName == "" {
+		newUserDetails.FirstName = userDetails.FirstName
+	}
+	if newUserDetails.LastName == "" {
+		newUserDetails.LastName = userDetails.LastName
+	}
+	if newUserDetails.Gender == "" {
+		newUserDetails.Gender = userDetails.Gender
+	}
+	if newUserDetails.DateOfBirth == "" {
+		newUserDetails.DateOfBirth = userDetails.DateOfBirth
+	}
+	log.Println(newUserDetails)
+	err = r.Store.ChangeUserDetails(authEmail, newUserDetails)
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil

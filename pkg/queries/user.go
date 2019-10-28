@@ -15,37 +15,6 @@ func userDetailsQuery(resolver resolvers.Resolver) *graphql.Field {
 	}
 }
 
-func registerQuery(resolver resolvers.Resolver) *graphql.Field {
-	return &graphql.Field{
-		Type:        graphql.Boolean,
-		Description: "Register new user",
-		Args: graphql.FieldConfigArgument{
-			"email": &graphql.ArgumentConfig{
-				Type: graphql.String,
-			},
-			"password": &graphql.ArgumentConfig{
-				Type: graphql.String,
-			},
-			"firstName": &graphql.ArgumentConfig{
-				Type: graphql.String,
-			},
-			"lastName": &graphql.ArgumentConfig{
-				Type: graphql.String,
-			},
-			"gender": &graphql.ArgumentConfig{
-				Type: graphql.String,
-			},
-			"dateOfBirth": &graphql.ArgumentConfig{
-				Type: graphql.String,
-			},
-			"sendDeals": &graphql.ArgumentConfig{
-				Type: graphql.Boolean,
-			},
-		},
-		Resolve: resolver.Register,
-	}
-}
-
 func authenticateQuery(resolver resolvers.Resolver) *graphql.Field {
 	return &graphql.Field{
 		Type:        types.SessionToken,
